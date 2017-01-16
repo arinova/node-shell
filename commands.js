@@ -1,38 +1,43 @@
 var fs = require('fs');
+var request= require('request');
 
 module.exports = {
-  pwd: function (){
-        process.stdout.write(process.cwd());
-        process.stdout.write('\nprompt > ');
+  pwd: function (stdin, param, done){
+        done(process.cwd());
       },
 
-  date: function(){
+  date: function(stdin, param, done){
       var date = new Date();
-      process.stdout.write(date.toString());
-      process.stdout.write('\nprompt > ');
+      done(date.toString());
     },
 
-  ls: function(){fs.readdir('.', function(err, files) {
+  ls: function(stdin, param, done){fs.readdir('.', function(err, files) {
         if (err) throw err;
           files.forEach(function(file) {
-          process.stdout.write(file.toString() + "\n");
+           done(file.toString() + "\n");
           })
-          process.stdout.write("\nprompt > ");
+
         });
       },
-  echo: function(str){
-        process.stdout.write(str);
-        process.stdout.write("\nprompt > ");
+  echo: function(stdin, str, done){
+              done(str);
       },
-  cat: function(filename){
-        fs.readFile(filename, 'utf8', function(err, data){
+  cat: function(stdin, filename, done){
+
+    var input= filename || stdin;
+
+        fs.readFile(input, 'utf8', function(err, data){
           if(err) throw err;
-          process.stdout.write(data);
-          process.stdout.write("\nprompt > ");
+      done(data);
         });
       },
-  head: function(filename){
-    fs.readFile(filename, 'utf8', function(err, data){
+  head: function(stdin, filename, done){
+    console.log("head stdin", stdin );
+    console.log("head filename", done);
+    var input= filename || stdin;
+    console.log("input", input);
+
+    fs.readFile(input, 'utf8', function(err, data){
       if(err) throw err;
       var split=data.split("\n");
       var i=0;
@@ -41,11 +46,10 @@ module.exports = {
         newdata=newdata.concat(split[i] + "\n");
         i++;
       }
-      process.stdout.write(newdata);
-      process.stdout.write("\nprompt > ");
+      done(newdata);
     });
   },
-  tail: function(filename){
+  tail: function(stdin, filename, done){
     fs.readFile(filename, 'utf8', function(err, data){
       if(err) throw err;
       var split=data.split("\n");
@@ -55,28 +59,27 @@ module.exports = {
         newdata=newdata.concat(split[i] + "\n");
         i++;
       }
-      process.stdout.write(newdata);
-      process.stdout.write("\nprompt > ");
+      done(newdata);
     });
   },
-  wc: function(filename){
+  wc: function(stdin, filename, done){
     fs.readFile(filename, 'utf8', function(err, data){
       if(err) throw err;
       var split=data.split("\n");
-      process.stdout.write(split.length + "");
-      process.stdout.write("\nprompt > ");
+      done(split.length + "");
     });
   },
-  sort: function(filename){
+  sort: function(stdin, filename, done){
     fs.readFile(filename, 'utf8', function(err, data){
       if(err) throw err;
       var split=data.split("\n");
       split.sort();
-      process.stdout.write(split.join("\n"));
-      process.stdout.write("\nprompt > ");
+
+        done(split.join("\n"));
+
     });
   },
-  uniq: function(filename){
+  uniq: function(stdin, filename,done){
     fs.readFile(filename, 'utf8', function(err, data){
       if(err) throw err;
       var split=data.split("\n");
@@ -93,9 +96,21 @@ module.exports = {
       }
 
 
-      process.stdout.write(newdata);
-      process.stdout.write("\nprompt > ");
+      done(newdata);
+
     });
+  },
+  curl: function(stdin, url, done){
+
+
+    request(url, function (error, response, body) {
+      if (!error && response.statusCode == 200) {
+        //console.log(body) // Show the HTML for the Google homepage.
+          done(body);
+      }
+    });
+
+    process.stdout.write("\nprompt > ");
   },
 
 };
